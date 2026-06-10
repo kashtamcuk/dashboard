@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Карта & GPS | AI Фітнес</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="css/dashboard.css">
+    <style>
+        /* Стилі для інтеграції карти в наш темний ШІ-інтерфейс */
+        .map-layout {
+            display: flex;
+            gap: 20px;
+            margin-top: 20px;
+            height: calc(100vh - 120px);
+        }
+        .control-panel {
+            flex: 1;
+            min-width: 320px;
+            max-width: 400px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            overflow-y: auto;
+        }
+        #map {
+            flex: 2;
+            border-radius: 16px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: #111;
+        }
+        .activity-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin: 10px 0;
+        }
+        .btn-activity {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #fff;
+            padding: 12px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 0.95rem;
+            transition: all 0.2s ease;
+            text-align: left;
+        }
+        .btn-activity:hover {
+            background: rgba(0, 162, 255, 0.1);
+            border-color: rgba(0, 162, 255, 0.4);
+        }
+        .btn-activity.selected {
+            background: #00a2ff;
+            border-color: #00a2ff;
+            color: #fff;
+            box-shadow: 0 4px 12px rgba(0, 162, 255, 0.3);
+        }
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            margin-bottom: 10px;
+        }
+        .input-group select, .input-group input {
+            padding: 10px;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #fff;
+            border-radius: 8px;
+            font-size: 1rem;
+        }
+        .btn-action {
+            width: 100%;
+            padding: 15px;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            border: none;
+            transition: all 0.2s ease;
+        }
+        .btn-action-start {
+            background: #00f5d4;
+            color: #000;
+        }
+        .btn-action-start:hover {
+            background: #00c7ac;
+            box-shadow: 0 4px 15px rgba(0, 245, 212, 0.4);
+        }
+        .ai-map-box {
+            background: rgba(255, 183, 3, 0.1);
+            border-left: 4px solid #ffb703;
+            padding: 15px;
+            border-radius: 4px 12px 12px 4px;
+        }
+        .stats-display p {
+            font-size: 1.05rem;
+            margin: 8px 0;
+            display: flex;
+            justify-content: space-between;
+            border-bottom: 1px dashed rgba(255,255,255,0.05);
+            padding-bottom: 5px;
+        }
+        .stats-display span {
+            font-weight: bold;
+            color: #00a2ff;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="dashboard-wrapper">
+        <aside class="sidebar">
+            <div class="logo">AI-Sport</div>
+            <nav>
+                <a href="dashboard.html" class="nav-item">🏠 Головна</a>
+                <a href="map.html" class="nav-item active">🗺️ Карта & GPS</a>
+                <a href="#" class="nav-item">🎵 Музика</a>
+                <a href="#" class="nav-item">🏆 Досягнення</a>
+            </nav>
+        </aside>
+
+        <main class="main-content">
+            <h2>🗺️ GPS Моніторинг & AI Маршрути</h2>
+            
+            <div class="map-layout">
+                <div class="control-panel">
+                    
+                    <div class="card" id="panel-setup">
+                        <h3>➕ Створити ціль</h3>
+                        <p style="color: #aaa; font-size: 0.9rem; margin-bottom: 10px;">Обери вид активності:</p>
+                        
+                        <div class="activity-grid">
+                            <button class="btn-activity selected" data-type="walking">🚶 Ходьба</button>
+                            <button class="btn-activity" data-type="running">🏃 Біг</button>
+                            <button class="btn-activity" data-type="cycling">🚴 Велосипед</button>
+                            <button class="btn-activity" data-type="scooter">🛴 Самокат</button>
+                            <button class="btn-activity" data-type="skates">🛼 Ролики</button>
+                            <button class="btn-activity" data-type="hiking">🥾 Похід</button>
+                        </div>
+
+                        <div class="input-group">
+                            <label>Тип цілі:</label>
+                            <select id="target-type">
+                                <option value="distance">Відстань (км)</option>
+                                <option value="time">Час (хвилин)</option>
+                            </select>
+                        </div>
+
+                        <div class="input-group">
+                            <label>Значення цілі:</label>
+                            <input type="number" id="target-value" value="5" min="1">
+                        </div>
+
+                        <button class="btn-action btn-action-start" id="btn-start">▶️ Почати тренування</button>
+                    </div>
+
+                    <div class="card" id="panel-tracking" style="display: none;">
+                        <h3>⚡ Тренування активоване</h3>
+                        
+                        <div class="stats-display" style="margin: 15px 0;">
+                            <p>Пройдено: <span id="stat-distance">0.00</span> км</p>
+                            <p>Залишилось: <span id="stat-left">--</span></p>
+                            <p>Час у русі: <span id="stat-time">00:00:00</span></p>
+                            <p>Швидкість: <span id="stat-speed">0.0</span> км/год</p>
+                            <p>Прогрес: <span id="stat-progress">0%</span></p>
+                        </div>
+
+                        <button class="btn-action" id="btn-stop" style="background: #ff6b6b; color: white;">🛑 Зупинити</button>
+                    </div>
+
+                    <div class="ai-map-box">
+                        <h4 style="color: #ffb703; margin-top: 0; margin-bottom: 8px;">🤖 AI Тренер підказує:</h4>
+                        <p id="ai-map-advice" style="margin: 0; font-size: 0.9rem; line-height: 1.5; color: #eee;">
+                            Для ходьби я рекомендую обирати місцеві парки та затишні пішохідні зони подалі від автомобільних доріг.
+                        </p>
+                    </div>
+
+                </div>
+
+                <div id="map"></div>
+            </div>
+        </main>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="js/map.js"></script>
+</body>
+</html>

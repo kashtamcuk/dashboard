@@ -1,0 +1,124 @@
+/* Загальні налаштування */
+body {
+    margin: 0;
+    padding: 0;
+    background-color: #121212;
+    color: #ffffff;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+}
+
+/* Контейнер форми */
+.auth-container {
+    background-color: #1e1e1e;
+    width: 100%;
+    max-width: 420px;
+    padding: 30px;
+    border-radius: 16px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+    border: 1px solid #2d2d2d;
+}
+
+h2 {
+    margin-top: 0;
+    margin-bottom: 20px;
+    font-size: 24px;
+    text-align: center;
+    color: #007bff;
+}
+
+/* Помилки */
+.error-text {
+    color: #ff6b6b;
+    font-size: 14px;
+    text-align: center;
+    min-height: 20px;
+    margin-bottom: 15px;
+}
+
+/* Елементи введення */
+.input-group {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 20px;
+}
+
+.input-group label {
+    font-size: 14px;
+    margin-bottom: 8px;
+    color: #aaaaaa;
+}
+
+.input-group input, 
+.input-group select {
+    padding: 12px;
+    border-radius: 8px;
+    border: 1px solid #333;
+    background-color: #2d2d2d;
+    color: #fff;
+    font-size: 16px;
+    transition: border-color 0.3s ease;
+}
+
+.input-group input:focus, 
+.input-group select:focus {
+    outline: none;
+    border-color: #007bff;
+}
+
+/* Управління кроками (Степер) */
+.form-step {
+    display: none; /* Ховаємо кроки за замовчуванням */
+}
+
+.form-step.active {
+    display: block; /* Показуємо тільки активний крок */
+}
+
+/* Кнопки */
+.btn-main, .btn-success, .btn-secondary {
+    width: 100%;
+    padding: 14px;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+
+.btn-main {
+    background-color: #007bff;
+    color: #fff;
+}
+
+.btn-main:hover {
+    background-color: #0056b3;
+}
+
+.btn-success {
+    background-color: #00c853;
+    color: #fff;
+}
+
+.btn-success:hover {
+    background-color: #009624;
+}
+
+.btn-secondary {
+    background-color: #444;
+    color: #fff;
+}
+
+.btn-secondary:hover {
+    background-color: #555;
+}
+
+/* Групування кнопок на 2 кроці */
+.btn-group {
+    display: flex;
+    gap: 12px;
+}
