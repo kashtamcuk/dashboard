@@ -25,6 +25,12 @@ document.addEventListener('DOMContentLoaded', () => {
             // Очищення помилок
             errorMessage.innerText = '';
 
+            // Перевіряємо, чи існують поля, щоб уникнути помилки "Cannot read properties of null"
+            if (!displayName || !email || !password) {
+                console.error("Критична помилка: Деякі поля Кроку 1 відсутні в HTML.");
+                return;
+            }
+
             // Валідація першого кроку
             if (!displayName.value.trim() || !email.value.trim() || !password.value) {
                 errorMessage.innerText = 'Будь ласка, заповніть усі поля першого кроку.';
@@ -36,8 +42,8 @@ document.addEventListener('DOMContentLoaded', () => {
             step2.classList.add('active');
             formTitle.innerText = 'Реєстрація (Крок 2/2)';
 
-            // 🔥 ФІКС ПОМИЛКИ: Тимчасово вимикаємо стандартну валідацію HTML5,
-            // щоб браузер не шукав приховані поля Кроку 1 при сабміті форми.
+            // Тимчасово вимикаємо стандартну валідацію HTML5,
+            // щоб браузер не шукав приховані поля Кроку 1 при сабміті форми
             if (form) {
                 form.setAttribute('novalidate', 'true');
             }
@@ -83,9 +89,14 @@ document.addEventListener('DOMContentLoaded', () => {
             };
 
             try {
-                // ДИНАМІЧНИЙ URL: якщо ми на localhost — шлемо туди, якщо на GitHub — на твій реальний сервер
-                const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-                const backendUrl = isLocal ? 'http://localhost:5000' : 'https://твій-сервер-в-інтернеті.com';
+                // 🔥 РОЗУМНИЙ ДИНАМІЧНИЙ URL ДЛЯ ВАРІАНТУ Б:
+                // Якщо тестуєш на комп'ютері локально — використовується localhost.
+                // Якщо відкриваєш через телефон або GitHub Pages — підставляється твій локальний IP.
+                const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+                
+                // ⚠️ ЗАМІНИ '192.168.X.X' НА СВОЮ РЕАЛЬНУ IPv4-АДРЕСУ, ЯКУ ТИ ЗНАЙШОВ ЧЕРЕЗ IPCONFIG!
+                const localIp = '192.168.X.X'; 
+                const backendUrl = isLocalhost ? 'http://localhost:5000' : `http://${localIp}:5000`;
 
                 // Звертаємось до нашого Node.js бекенду
                 const response = await fetch(`${backendUrl}/api/auth/register`, {
@@ -105,7 +116,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 // 1. Зберігаємо JWT токен для авторизації
                 localStorage.setItem('token', data.token);
                 
-                // 2. Зберігаємо фізичні метрики для майбутніх розрахунків ШІ (Мапа зчитає вагу звідси)
+                // 2. Зберігаємо фізичні метрики для майбутніх розрахунків ШІ
                 localStorage.setItem('userName', payload.displayName);
                 localStorage.setItem('userWeight', payload.weight);
                 localStorage.setItem('userHeight', payload.height);
@@ -119,7 +130,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 window.location.href = 'dashboard.html';
 
             } catch (error) {
-                errorMessage.innerText = error.message;
+                errorMessage.innerText = "Помилка з'єднання з сервером: " + error.message;
             }
         });
     }
