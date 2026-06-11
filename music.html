@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Музика | AI Фітнес</title>
+    <link rel="stylesheet" href="css/dashboard.css">
+</head>
+<body>
+
+    <div class="dashboard-wrapper">
+        <aside class="sidebar">
+            <div class="logo">AI-Sport</div>
+            <nav>
+                <a href="dashboard.html" class="nav-item">🏠 Головна</a>
+                <a href="map.html" class="nav-item">🗺️ Карта & GPS</a>
+                <a href="music.html" class="nav-item active">🎵 Музика</a>
+                <a href="#" class="nav-item">🏆 Досягнення</a>
+            </nav>
+        </aside>
+
+        <main class="main-content">
+            
+            <div class="card music-main-card">
+                <div class="music-header">
+                    <h2>🎵 Аудіо-плеєр тренувань</h2>
+                    <p class="subtitle">Стрімінг без завантаження файлів (Синхронізовано з ШІ)</p>
+                </div>
+
+                <div class="player-full-layout">
+                    
+                    <div class="player-visual-zone">
+                        <img id="player-cover" src="" alt="Обкладинка треку" class="main-track-art">
+                    </div>
+
+                    <div class="player-interface-zone">
+                        <div class="track-info-block">
+                            <h1 id="player-title">Завантаження треку...</h1>
+                            <p id="player-artist">Виконавець</p>
+                        </div>
+
+                        <div class="timeline-block">
+                            <input type="range" id="player-progress" class="media-slider" min="0" max="100" value="0">
+                        </div>
+
+                        <div class="control-buttons-block">
+                            <button id="player-prev" class="btn-media-action" title="Попередній трек">⏮</button>
+                            <button id="player-play" class="btn-media-action play-main-btn" title="Відтворення / Пауза">▶</button>
+                            <button id="player-next" class="btn-media-action" title="Наступний трек">⏭</button>
+                        </div>
+
+                        <div class="volume-block">
+                            <span class="vol-icon">🔈</span>
+                            <input type="range" id="player-volume" class="media-slider volume-slider" min="0" max="100" value="100">
+                            <span class="vol-icon">🔊</span>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <script src="js/player.js"></script>
+</body>
+</html>

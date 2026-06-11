@@ -361,3 +361,164 @@ nav {
         font-size: 1.7rem;
     }
 }
+.workout-stats {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+.stat-item {
+    display: flex;
+    justify-content: space-between;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    padding-bottom: 5px;
+}
+.stat-label {
+    color: #888;
+}
+.stat-value {
+    color: #00f5d4;
+    font-weight: bold;
+    font-family: 'Courier New', Courier, monospace; /* додасть кіберпанк-вабу */
+}
+.ai-mini-advice {
+    font-size: 0.9rem;
+    font-style: italic;
+    color: #ffb703;
+}
+
+/* ==========================================================================
+   МЕДІА-ЦЕНТР СТИЛІ (MUSIC.HTML)
+   ========================================================================== */
+.music-main-card {
+    background: #111827;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 16px;
+    padding: 35px;
+    margin-top: 10px;
+}
+
+.music-header h2 {
+    margin: 0 0 5px 0;
+    font-size: 1.8rem;
+    color: #fff;
+}
+
+.music-header .subtitle {
+    color: #aaa;
+    font-size: 0.95rem;
+    margin-bottom: 35px;
+}
+
+/* Флекс-сітка: обкладинка зліва, пульт справа */
+.player-full-layout {
+    display: flex;
+    gap: 40px;
+    align-items: center;
+    justify-content: center;
+}
+
+.player-visual-zone .main-track-art {
+    width: 260px;
+    height: 260px;
+    border-radius: 12px;
+    object-fit: cover;
+    box-shadow: 0 12px 35px rgba(0, 0, 0, 0.7);
+    border: 2px solid rgba(255, 255, 255, 0.05);
+    display: block;
+}
+
+.player-interface-zone {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+/* Інформація про трек */
+.track-info-block h1 {
+    font-size: 2rem;
+    margin: 0 0 6px 0;
+    color: #fff;
+    letter-spacing: -0.5px;
+}
+
+.track-info-block p {
+    margin: 0;
+    font-size: 1.1rem;
+    color: #00f5d4; /* Колір вашої активності з карти */
+    font-weight: 500;
+}
+
+/* Повзунки (Таймлайн та Гучність) */
+.media-slider {
+    width: 100%;
+    height: 6px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    outline: none;
+    accent-color: #00f5d4;
+    cursor: pointer;
+}
+
+/* Рядок кнопок перемикання */
+.control-buttons-block {
+    display: flex;
+    align-items: center;
+    gap: 30px;
+}
+
+.btn-media-action {
+    background: none;
+    border: none;
+    color: #fff;
+    font-size: 2.2rem;
+    cursor: pointer;
+    transition: transform 0.1s ease, color 0.2s ease;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn-media-action:hover {
+    color: #00f5d4;
+    transform: scale(1.1);
+}
+
+.btn-media-action.play-main-btn {
+    font-size: 3.2rem;
+    color: #00f5d4;
+}
+
+.btn-media-action.play-main-btn:hover {
+    color: #fff;
+}
+
+/* Блок регулювання гучності */
+.volume-block {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    max-width: 220px;
+    color: #aaa;
+    margin-top: 5px;
+}
+
+.volume-slider {
+    accent-color: #00f5d4;
+}
+
+/* Адаптація під невеликі екрани (гнучкий дизайн) */
+@media (max-width: 768px) {
+    .player-full-layout {
+        flex-direction: column;
+        text-align: center;
+    }
+    .control-buttons-block {
+        justify-content: center;
+    }
+    .volume-block {
+        margin: 0 auto;
+    }
+}

@@ -35,6 +35,12 @@ document.addEventListener('DOMContentLoaded', () => {
             step1.classList.remove('active');
             step2.classList.add('active');
             formTitle.innerText = 'Реєстрація (Крок 2/2)';
+
+            // 🔥 ФІКС ПОМИЛКИ: Тимчасово вимикаємо стандартну валідацію HTML5,
+            // щоб браузер не шукав приховані поля Кроку 1 при сабміті форми.
+            if (form) {
+                form.setAttribute('novalidate', 'true');
+            }
         });
     }
 
@@ -45,6 +51,11 @@ document.addEventListener('DOMContentLoaded', () => {
             step2.classList.remove('active');
             step1.classList.add('active');
             formTitle.innerText = 'Реєстрація (Крок 1/2)';
+
+            // Якщо повернулися назад — повертаємо стандартну валідацію браузера
+            if (form) {
+                form.removeAttribute('novalidate');
+            }
         });
     }
 
@@ -53,6 +64,12 @@ document.addEventListener('DOMContentLoaded', () => {
         form.addEventListener('submit', async (e) => {
             e.preventDefault(); // Зупиняємо перезавантаження сторінки
             errorMessage.innerText = '';
+
+            // Додаткова валідація другого кроку перед відправкою
+            if (!birthDate.value || !weight.value || !height.value) {
+                errorMessage.innerText = 'Будь ласка, заповніть усі поля другого кроку.';
+                return;
+            }
 
             // Збір усіх даних в один об'єкт
             const payload = {
@@ -66,8 +83,12 @@ document.addEventListener('DOMContentLoaded', () => {
             };
 
             try {
+                // ДИНАМІЧНИЙ URL: якщо ми на localhost — шлемо туди, якщо на GitHub — на твій реальний сервер
+                const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+                const backendUrl = isLocal ? 'http://localhost:5000' : 'https://твій-сервер-в-інтернеті.com';
+
                 // Звертаємось до нашого Node.js бекенду
-                const response = await fetch('http://localhost:5000/api/auth/register', {
+                const response = await fetch(`${backendUrl}/api/auth/register`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
@@ -84,7 +105,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 // 1. Зберігаємо JWT токен для авторизації
                 localStorage.setItem('token', data.token);
                 
-                // 2. 🔥 ДОДАТКОВО: Зберігаємо фізичні метрики для майбутніх розрахунків ШІ (Етапи 5 та 6)
+                // 2. Зберігаємо фізичні метрики для майбутніх розрахунків ШІ (Мапа зчитає вагу звідси)
                 localStorage.setItem('userName', payload.displayName);
                 localStorage.setItem('userWeight', payload.weight);
                 localStorage.setItem('userHeight', payload.height);
@@ -92,7 +113,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 localStorage.setItem('userBirthDate', payload.birthDate);
                 
                 // Показуємо повідомлення користувачу
-                alert(`Вітаємо, ${data.user.displayName}! Реєстрація пройшла успішно.`);
+                alert(`Вітаємо, ${data.user ? data.user.displayName : payload.displayName}! Реєстрація пройшла успішно.`);
                 
                 // Перенаправляємо на головну сторінку з AI-дашбордом
                 window.location.href = 'dashboard.html';

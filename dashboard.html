@@ -14,7 +14,7 @@
             <nav>
                 <a href="#" class="nav-item active">🏠 Головна</a>
                 <a href="map.html" class="nav-item">🗺️ Карта & GPS</a>
-                <a href="#" class="nav-item">🎵 Музика</a>
+                <a href="music.html" class="nav-item">🎵 Музика</a>
                 <a href="#" class="nav-item">🏆 Досягнення</a>
             </nav>
         </aside>
@@ -36,10 +36,10 @@
                 </div>
             </section>
 
-           <div class="card card-calories">
+            <div class="card card-calories">
                 <h3>🔥 Спалені калорії</h3>
                 <div class="calories-counter">
-                    <span id="calories-burned">0</span> / 2100 ккал
+                    <span id="cal-burned">0</span> / <span id="cal-target">2100</span> ккал
                 </div>
                 <div class="progress-bar-container">
                     <div id="calories-progress-fill" style="width: 0%; height: 8px; background: #ff4500; transition: width 0.5s ease;"></div>
@@ -47,31 +47,54 @@
                 <span id="calories-percent">0%</span>
             </div>
                 
+            <div class="stat-card water-card">
+                <h4>💧 Водний трекер</h4>
+                <p class="water-display">
+                    <span id="water-current">0</span> / <span id="water-target">2.5</span> л
+                </p>
                 
-                <div class="stat-card water-card">
-                    <h4>💧 Водний трекер</h4>
-                    <p class="water-display">
-                        <span id="water-current">0</span> / <span id="water-target">2.5</span> л
-                    </p>
-                    
-                    <div class="water-progress-bar">
-                        <div id="water-progress-fill" style="width: 0%;"></div>
-                    </div>
-
-                    <div class="water-buttons">
-                        <button class="btn-water" data-amount="0.1">+100 мл</button>
-                        <button class="btn-water" data-amount="0.25">+250 мл</button>
-                        <button class="btn-water" data-amount="0.5">+500 мл</button>
-                        <button class="btn-water-reset" id="btn-water-reset" style="background: none; border: none; cursor: pointer; font-size: 0.9rem; color: #aaa;">🔄 Скинути</button>
-                    </div>
-
-                    <div class="ai-water-reminder">
-                        <p id="ai-water-text">🤖 AI: Завантаження рекомендацій...</p>
-                    </div>
+                <div class="water-progress-bar">
+                    <div id="water-progress-fill" style="width: 0%;"></div>
                 </div>
 
+                <div class="water-buttons">
+                    <button class="btn-water" data-amount="0.1">+100 мл</button>
+                    <button class="btn-water" data-amount="0.25">+250 мл</button>
+                    <button class="btn-water" data-amount="0.5">+500 мл</button>
+                    <button class="btn-water-reset" id="btn-water-reset" style="background: none; border: none; cursor: pointer; font-size: 0.9rem; color: #aaa;">🔄 Скинути</button>
+                </div>
 
+                <div class="ai-water-reminder">
+                    <p id="ai-water-text">🤖 AI: Завантаження рекомендацій...</p>
+                </div>
             </div>
+
+            <div class="card workout-card" style="margin-top: 20px;">
+                <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                    <h3 style="margin: 0;">🤖 Останнє тренування</h3>
+                    <span class="icon" style="font-size: 1.5rem;">🏃‍♂️</span>
+                </div>
+                <div class="card-body">
+                    <div class="workout-stats" style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 15px;">
+                        <div class="stat-item" style="display: flex; justify-content: space-between; border-bottom: 1px solid rgba(255, 255, 255, 0.1); padding-bottom: 5px;">
+                            <span class="stat-label" style="color: #aaa;">Тип активності:</span>
+                            <span id="last-workout-activity" class="stat-value" style="color: #00f5d4; font-weight: bold;">Немає даних</span>
+                        </div>
+                        <div class="stat-item" style="display: flex; justify-content: space-between; border-bottom: 1px solid rgba(255, 255, 255, 0.1); padding-bottom: 5px;">
+                            <span class="stat-label" style="color: #aaa;">Дистанція:</span>
+                            <span id="last-workout-distance" class="stat-value" style="color: #00f5d4; font-weight: bold; font-family: monospace;">0.00 км</span>
+                        </div>
+                        <div class="stat-item" style="display: flex; justify-content: space-between; border-bottom: 1px solid rgba(255, 255, 255, 0.1); padding-bottom: 5px;">
+                            <span class="stat-label" style="color: #aaa;">Час у русі:</span>
+                            <span id="last-workout-time" class="stat-value" style="color: #00f5d4; font-weight: bold; font-family: monospace;">00:00:00</span>
+                        </div>
+                    </div>
+                    <p id="ai-workout-feedback" style="font-size: 0.95rem; font-style: italic; color: #ffb703; margin: 0;">
+                        🤖 AI: Тренувань за сьогодні не виявлено. Мапа чекає на твій старт!
+                    </p>
+                </div>
+            </div>
+
         </main>
     </div>
 

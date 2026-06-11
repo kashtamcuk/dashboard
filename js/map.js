@@ -1,6 +1,10 @@
 document.addEventListener('DOMContentLoaded', () => {
+    // ==========================================
+    // 1. ІНІЦІАЛІЗАЦІЯ КАРТИ ТА ЗМІННИХ
+    // ==========================================
     const map = L.map('map').setView([49.0, 24.0], 13);
 
+    // Темна стильна тема для карти (підходить під футуристичний дизайн)
     L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
         attribution: '&copy; OpenStreetMap &copy; CARTO'
     }).addTo(map);
@@ -17,6 +21,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Змінна для збереження блокування екрану (Кишеньковий режим)
     let wakeLock = null;
 
+    // Елементи інтерфейсу (DOM)
     const btnActivity = document.querySelectorAll('.btn-activity');
     const btnStart = document.getElementById('btn-start'); 
     const btnStop = document.getElementById('btn-stop');
@@ -30,6 +35,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const speedDisplay = document.getElementById('stat-speed');
     const progressDisplay = document.getElementById('stat-progress');
 
+    // Автоматичне визначення початкової геолокації користувача
     if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(position => {
             const { latitude, longitude } = position.coords;
@@ -38,15 +44,17 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // База порад локального ШІ для різних видів спорту
     const aiTips = {
         walking: "Для ходьби я рекомендую обирати місцеві парки та затишні пішохідні зони подалі від автомобільних доріг.",
-        running: "Для бігу чудово підійдуть стадіони або грунтові доріжки в парках. Намагайся тримати рівний пульс!",
+        running: "Для бігу чудово підійдуть стадіони або ґрунтові доріжки в парках. Намагайся тримати рівний пульс!",
         cycling: "Велосипед вимагає простору. Обирай маршрути з велодоріжками, де менше світлофорів і перехресть.",
         scooter: "Для самоката потрібен ідеальний асфальт. Уникай бруківки та високих бордюрів для твоєї безпеки.",
         skates: "Ролики обожнюють гладке покриття. Спеціалізовані роллердроми або рівні паркові алеї — твій вибір.",
         hiking: "Похід — це виклик. Перевір зручність взуття, заряди телефон та візьми з собою достатній запас води."
     };
 
+    // Вибір активності
     btnActivity.forEach(btn => {
         btn.addEventListener('click', () => {
             if(localStorage.getItem('isWorkoutActive') === 'true') return; 
@@ -57,8 +65,13 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
+    // ==========================================
+    // 2. ДОПОМІЖНІ ФОРМУЛИ (МАТЕМАТИКА ТА ЧАС)
+    // ==========================================
+    
+    // Формула Гаверсину для розрахунку відстані між координатами GPS
     function calculateDistance(lat1, lon1, lat2, lon2) {
-        const R = 6371;
+        const R = 6371; // Радіус Землі в км
         const dLat = (lat2 - lat1) * Math.PI / 180;
         const dLon = (lon2 - lon1) * Math.PI / 180;
         const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
@@ -67,6 +80,7 @@ document.addEventListener('DOMContentLoaded', () => {
         return R * c;
     }
 
+    // Форматування мілісекунд у красивий рядок "ГГ:ММ:СС"
     function formatTime(ms) {
         const totalSeconds = Math.floor(ms / 1000);
         const hours = String(Math.floor(totalSeconds / 3600)).padStart(2, '0');
@@ -75,12 +89,14 @@ document.addEventListener('DOMContentLoaded', () => {
         return `${hours}:${minutes}:${seconds}`;
     }
 
-    // ФУНКЦІЇ КЕРУВАННЯ ЖИВЛЕННЯМ (WAKE LOCK API)
+    // ==========================================
+    // 3. КЕРУВАННЯ ЖИВЛЕННЯМ (WAKE LOCK API)
+    // ==========================================
     async function activateWakeLock() {
         try {
             if ('wakeLock' in navigator) {
                 wakeLock = await navigator.wakeLock.request('screen');
-                console.log('🤖 AI: Кишеньковий режим активовано! Процесор і GPS не заснуть.');
+                console.log('🤖 AI: Кишеньковий режим активовано! Екран і GPS не заснуть у кишені.');
             }
         } catch (err) {
             console.warn(`Не вдалося активувати фоновий режим: ${err.message}`);
@@ -97,6 +113,9 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    // ==========================================
+    // 4. ОНОВЛЕННЯ ДИНАМІЧНИХ МЕТРИК ТРЕКІНГУ
+    // ==========================================
     function updateTrackingMetrics() {
         const startTime = parseInt(localStorage.getItem('workoutStartTime'));
         if (!startTime) return;
@@ -109,9 +128,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (distDisplay) distDisplay.innerText = totalDistance.toFixed(2);
 
+        // Розрахунок поточної швидкості км/год
         const currentSpeed = (totalDistance / (elapsedTime / 3600000)).toFixed(1);
         if (speedDisplay) speedDisplay.innerText = isNaN(currentSpeed) || !isFinite(currentSpeed) ? "0.0" : currentSpeed;
 
+        // Розрахунок відсотка виконання цілі
         let percent = 0;
         if (targetType === 'distance') {
             percent = Math.min((totalDistance / targetValue) * 100, 100);
@@ -124,24 +145,29 @@ document.addEventListener('DOMContentLoaded', () => {
         if (progressDisplay) progressDisplay.innerText = `${Math.floor(percent)}%`;
 
         if (percent >= 100) {
-            console.log("Ціль досягнута!");
+            console.log("🤖 AI: Ціль на тренування успішно виконана!");
         }
     }
 
+    // Постійне слухання координат через апаратний GPS
     function startListeningGPS() {
         if (!navigator.geolocation) return;
 
         watchId = navigator.geolocation.watchPosition(position => {
-            const { latitude, longitude, speed } = position.coords;
+            const { latitude, longitude } = position.coords;
             const newPos = [latitude, longitude];
 
+            // Оновлюємо маркер користувача на карті
             if (userMarker) userMarker.setLatLng(newPos);
             else userMarker = L.marker(newPos).addTo(map);
             map.panTo(newPos);
 
+            // Якщо це не перша точка — рахуємо дистанцію від попередньої
             if (userPath.length > 0) {
                 const lastPos = userPath[userPath.length - 1];
                 const diff = calculateDistance(lastPos[0], lastPos[1], latitude, longitude);
+                
+                // Фільтр шумів GPS: зараховуємо рух тільки якщо крок більше 2 метрів
                 if (diff > 0.002) { 
                     totalDistance += diff;
                     localStorage.setItem('workoutTotalDistance', totalDistance); 
@@ -151,6 +177,7 @@ document.addEventListener('DOMContentLoaded', () => {
             userPath.push(newPos);
             localStorage.setItem('workoutUserPath', JSON.stringify(userPath)); 
 
+            // Малюємо або оновлюємо лінію маршруту (неоновий синій колір)
             if (routePolyline) {
                 routePolyline.setLatLngs(userPath);
             } else {
@@ -159,20 +186,24 @@ document.addEventListener('DOMContentLoaded', () => {
 
             updateTrackingMetrics();
         }, error => console.error(error), {
-            enableHighAccuracy: true,
+            enableHighAccuracy: true, // Вмикає точний GPS-модуль смартфона
             maximumAge: 0
         });
     }
 
-    // КЛІК: СТАРТ
+    // ==========================================
+    // 5. ОБРОБНИКИ КНОПОК (СТАРТ / СТОП)
+    // ==========================================
+    
+    // КЛІК: СТАРТ ТРЕНУВАННЯ
     if (btnStart) {
         btnStart.addEventListener('click', () => {
             const targetType = document.getElementById('target-type').value;
             const targetValue = parseFloat(document.getElementById('target-value').value) || 5;
 
-            // Активуємо утримання процесора для кишені
             activateWakeLock();
 
+            // Ініціалізуємо стан у локальній пам'яті
             localStorage.setItem('isWorkoutActive', 'true');
             localStorage.setItem('workoutStartTime', Date.now().toString());
             localStorage.setItem('workoutTargetType', targetType);
@@ -181,6 +212,7 @@ document.addEventListener('DOMContentLoaded', () => {
             localStorage.setItem('workoutUserPath', JSON.stringify([]));
             localStorage.setItem('workoutActivity', selectedActivity);
 
+            // Перемикаємо панелі налаштувань та трекінгу
             panelSetup.style.display = 'none';
             panelTracking.style.display = 'block';
 
@@ -192,21 +224,18 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // КЛІК: СТОП
-    // КЛІК: СТОП (Модернізований для розрахунку калорій)
+    // КЛІК: ЗАВЕРШИТЬ ТРЕНУВАННЯ (З СИНХРОНІЗАЦІЄЮ З ДАШБОРДОМ)
     if (btnStop) {
         btnStop.addEventListener('click', () => {
             if (watchId) navigator.geolocation.clearWatch(watchId);
             clearInterval(timerInterval);
 
-            // Зупиняємо кишеньковий режим
             deactivateWakeLock();
 
             const startTime = parseInt(localStorage.getItem('workoutStartTime'));
-            const elapsedTimeSec = (Date.now() - startTime) / 1000; // Час у секундах
-            const elapsedTimeHours = elapsedTimeSec / 3600; // Переводимо в години
+            const elapsedTimeSec = (Date.now() - startTime) / 1000; 
 
-            // Коефіцієнти MET для ШІ-калькулятора під кожну твою кнопку
+            // Коефіцієнти MET для точного індивідуального розрахунку калорій
             const metValues = {
                 walking: 3.5,
                 running: 8.0,
@@ -216,20 +245,57 @@ document.addEventListener('DOMContentLoaded', () => {
                 hiking: 6.5
             };
 
-            const activity = localStorage.getItem('workoutActivity') || 'walking';
-            const currentMET = metValues[activity] || 3.5;
-            const userWeight = 70; // Базова середня вага для розрахунків у кг
+            const activityKey = localStorage.getItem('workoutActivity') || 'walking';
+            const currentMET = metValues[activityKey] || 3.5;
+            
+            // Динамічно підтягуємо реальну вагу користувача
+            const userWeight = parseFloat(localStorage.getItem('userWeight')) || 70; 
 
-            // Головна формула: MET * Вага * Час у годинах
-            const burnedCalories = Math.round(currentMET * userWeight * elapsedTimeHours);
+            // 🔥 ЗАЛІЗОБЕТОННИЙ ЗАХИСТ ВІД ФЕЙК-КАЛОРІЙ:
+            let burnedCalories = 0;
 
-            // Рятуємо фінальні дані тренування в пам'ять
+            // Зараховуємо тренування, якщо пройдено більше 10 метрів (фільтр статики та шумів GPS)
+            if (totalDistance > 0.01) {
+                // Константи середньої швидкості (км/год) для розрахунку чистого часу руху
+                const averageSpeeds = {
+                    walking: 5.0,
+                    running: 10.0,
+                    cycling: 18.0,
+                    scooter: 12.0,
+                    skates: 12.0,
+                    hiking: 4.0
+                };
+                const speedFactor = averageSpeeds[activityKey] || 5.0;
+                
+                // Рахуємо чистий час у русі (години), відкидаючи час простою на одному місці
+                const pureMovingTimeHours = totalDistance / speedFactor;
+
+                // Розрахунок калорій на основі реального переміщення
+                burnedCalories = Math.round(currentMET * userWeight * pureMovingTimeHours);
+                if (burnedCalories < 1) burnedCalories = 1; 
+            } else {
+                // Якщо дистанція нульова (стояв або сидів) — спалено строго 0 ккал!
+                burnedCalories = 0; 
+            }
+
+            // Словник гарного перекладу з емодзі для Дашборду
+            const activityTitles = {
+                walking: "🚶‍♂️ Ходьба",
+                running: "🏃‍♂️ Біг",
+                cycling: "🚴‍♂️ Велосипед",
+                scooter: "🛴 Самокат",
+                skates: "🛼 Ролики",
+                hiking: "🥾 Похід"
+            };
+            const prettyActivityTitle = activityTitles[activityKey] || "🏃‍♂️ Активність";
+
+            // Рятуємо фінальні дані тренування в пам'ять (Ключі збігаються з dashboard.js)
             localStorage.setItem('lastWorkoutDistance', totalDistance.toFixed(2));
-            localStorage.setItem('lastWorkoutTime', elapsedTimeSec.toString());
-            localStorage.setItem('lastWorkoutActivity', activity);
+            localStorage.setItem('lastWorkoutTime', formatTime(elapsedTimeSec * 1000));
+            localStorage.setItem('lastWorkoutActivity', prettyActivityTitle);
             localStorage.setItem('lastWorkoutCalories', burnedCalories.toString());
 
-            // Плюсуємо калорії до загального щоденного лічильника
+            // Плюсуємо калорії до загального щоденного лічильника калорій на Дашборді
             let todayCalories = parseInt(localStorage.getItem('todayBurnedCalories')) || 0;
             todayCalories += burnedCalories;
             localStorage.setItem('todayBurnedCalories', todayCalories.toString());
@@ -239,15 +305,19 @@ document.addEventListener('DOMContentLoaded', () => {
             localStorage.removeItem('workoutStartTime');
 
             alert(`Тренування завершено!\nПройдено: ${totalDistance.toFixed(2)} км\nСпалено: ${burnedCalories} ккал 🔥`);
+            
+            // Автоматичний редірект на Головну для перевірки результатів
             window.location.href = 'dashboard.html';
         });
     }
 
+    // ==========================================
+    // 6. СИНХРОНІЗАЦІЯ ПРИ ПЕРЕЗАВАНТАЖЕННІ СТОРІНКИ
+    // ==========================================
     if (localStorage.getItem('isWorkoutActive') === 'true') {
         panelSetup.style.display = 'none';
         panelTracking.style.display = 'block';
 
-        // Перезапускаємо утримання фону, якщо сторінка була оновлена під час тренування
         activateWakeLock();
 
         totalDistance = parseFloat(localStorage.getItem('workoutTotalDistance')) || 0;
@@ -271,7 +341,7 @@ document.addEventListener('DOMContentLoaded', () => {
         startListeningGPS();
     }
     
-    // Обробка ситуації, коли користувач згорнув і розгорнув браузер назад вручну
+    // Перевірка стану блокування екрана, якщо користувач згорнув/розгорнув браузер
     document.addEventListener('visibilitychange', () => {
         if (document.visibilityState === 'visible' && localStorage.getItem('isWorkoutActive') === 'true') {
             activateWakeLock();

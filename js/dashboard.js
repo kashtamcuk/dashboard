@@ -19,6 +19,16 @@ document.addEventListener('DOMContentLoaded', async () => {
     const waterButtons = document.querySelectorAll('.btn-water');
     const btnWaterReset = document.getElementById('btn-water-reset');
 
+    // 🔥 НОВІ ЕЛЕМЕНТИ: Віджет музичного плеєра на Дашборді
+    const trackTitle = document.getElementById('player-title');
+    const trackArtist = document.getElementById('player-artist');
+    const trackCover = document.getElementById('player-cover');
+    const btnPlay = document.getElementById('player-play');
+    const btnPrev = document.getElementById('player-prev');
+    const btnNext = document.getElementById('player-next');
+    const volumeSlider = document.getElementById('player-volume');
+    const progressBar = document.getElementById('player-progress');
+
     // Налаштування користувача з Етапу 1
     const userWeight = parseFloat(localStorage.getItem('userWeight')) || 70; // дефолт 70кг
     const userName = localStorage.getItem('userName') || 'Атлет';
@@ -61,8 +71,13 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (waterTargetEl) waterTargetEl.innerText = calculatedWaterTarget;
 
         const percentage = Math.min((currentWater / calculatedWaterTarget) * 100, 100);
+        
+        // 🔥 ПЛАВНА АНІМАЦІЯ ВОДИ ПРИ ЗАВАНТАЖЕННІ ТА КЛІКАХ
         if (waterProgressFill) {
-            waterProgressFill.style.width = `${percentage}%`;
+            waterProgressFill.style.width = '0%'; // Скидаємо в 0 для старту анімації
+            setTimeout(() => {
+                waterProgressFill.style.width = `${percentage}%`;
+            }, 150);
         }
 
         if (aiWaterText) {
@@ -107,20 +122,17 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     }
 
-    // Ініціалізація води
+    // Перша ініціалізація води
     updateWaterUI();
 
 
     // ==========================================
-    // 4. ЕТАП 5: РОЗРАХУНОК ТА ОНОВЛЕННЯ КАЛОРІЙ
+    // 4. ЕТАП 5: ЧИСТИЙ РОЗРАХУНОК КАЛОРІЙ (ТІЛЬКИ З GPS-КАРТИ)
     // ==========================================
     
-    function renderCalories(currentServerCalories, targetCalories) {
-        // Забираємо калорії, які набігли з GPS-карти за сьогодні
-        const gpsCalories = parseInt(localStorage.getItem('todayBurnedCalories')) || 0;
-        
-        // Фінальна сума: те, що прийшло з бази (сервера) + активність з мапи
-        const totalBurned = currentServerCalories + gpsCalories;
+    function renderCalories(targetCalories) {
+        // Забираємо калорії, які реальна активність набігала на GPS-мапі за сьогодні
+        const totalBurned = parseInt(localStorage.getItem('todayBurnedCalories')) || 0;
         const dailyGoal = targetCalories || 2100;
 
         // Виводимо числа на екран
@@ -130,12 +142,15 @@ document.addEventListener('DOMContentLoaded', async () => {
         // Рахуємо відсоток прогресу
         const percent = Math.min((totalBurned / dailyGoal) * 100, 100);
 
-        // Рухаємо неонову смужку прогресу
+        // 🔥 ПЛАВНА АНІМАЦІЯ КАЛОРІЙ ПРИ ЗАВАНТАЖЕННІ СТОРІНКИ
         if (caloriesProgressFill) {
-            caloriesProgressFill.style.width = `${percent}%`;
+            caloriesProgressFill.style.width = '0%'; // Старт з нуля
+            setTimeout(() => {
+                caloriesProgressFill.style.width = `${percent}%`;
+            }, 150);
         }
 
-        // Оновлюємо текстовий відсоток (якщо є такий елемент у верстці)
+        // Оновлюємо текстовий відсоток
         if (caloriesPercentDisplay) {
             caloriesPercentDisplay.innerText = `${Math.floor(percent)}%`;
         }
@@ -143,7 +158,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 
     // ==========================================
-    // 5. ЗАПИТ ДО БЕКЕНД СЕРВЕРА (ІНІЦІАЛІЗАЦІЯ)
+    // 5. ЗАПИТ ДО БЕКЕНД СЕРВЕРА (ІНІЦІАЛІЗАЦІЯ ПІДКАЗОК ШІ)
     // ==========================================
     try {
         const response = await fetch('http://localhost:5000/api/dashboard/init', {
@@ -164,8 +179,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             aiAdviceText.innerText = data.aiAdvice;
         }
 
-        // Рендеримо калорії, поєднуючи дані з сервера та GPS
-        renderCalories(parseInt(data.caloriesCurrent) || 0, parseInt(data.caloriesTarget) || 2100);
+        // Сервер тепер віддає ТІЛЬКИ глобальну ціль (наприклад 2100)
+        renderCalories(parseInt(data.caloriesTarget) || 2100);
 
     } catch (error) {
         console.error('Помилка завантаження дашборду:', error);
@@ -173,12 +188,133 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (skeletonBlock) skeletonBlock.style.display = 'none';
         
         if (aiAdviceText) {
-            aiAdviceText.innerText = 'Не вдалося завантажити глобальні поради ШІ. Перевірте з\'єднання з сервером.';
+            aiAdviceText.innerText = 'Не вдалося завантажити глобальні поради ШІ. Працює локальний ШІ-асистент.';
             aiAdviceText.style.color = '#ff6b6b';
         }
 
-        // Резервний варіант (Fallback): якщо сервер лежить, додаток все одно покаже калорії з GPS
-        console.log('🤖 AI: Ввімкнено автономний режим відображення калорій.');
-        renderCalories(0, 2100);
+        // Автономний режим (Fallback) — малюємо чисті калорії з GPS-карти
+        console.log('🤖 AI: Ввімкнено автономний режим трекера.');
+        renderCalories(2100);
+    }
+
+    // ==========================================
+    // 6. ВІДОБРАЖЕННЯ ОСТАННЬОГО ТРЕНУВАННЯ З КАРТИ
+    // ==========================================
+    function renderLastWorkout() {
+        const lastActivity = localStorage.getItem('lastWorkoutActivity');
+        const lastDistance = localStorage.getItem('lastWorkoutDistance');
+        const lastTime = localStorage.getItem('lastWorkoutTime');
+
+        const activityEl = document.getElementById('last-workout-activity');
+        const distanceEl = document.getElementById('last-workout-distance');
+        const timeEl = document.getElementById('last-workout-time');
+        const feedbackEl = document.getElementById('ai-workout-feedback');
+
+        if (lastActivity && lastDistance && lastTime) {
+            if (activityEl) activityEl.innerText = lastActivity;
+            if (distanceEl) distanceEl.innerText = `${parseFloat(lastDistance).toFixed(2)} км`;
+            if (timeEl) timeEl.innerText = lastTime;
+
+            if (feedbackEl) {
+                const dist = parseFloat(lastDistance);
+                if (dist > 5) {
+                    feedbackEl.innerText = `🤖 AI: Ого, ${dist.toFixed(1)} км — це потужно! Ти справжній кіборг, так тримати! 🏆`;
+                    feedbackEl.style.color = '#00f5d4';
+                } else if (dist > 0) {
+                    feedbackEl.innerText = `🤖 AI: Чудова робота! ${dist.toFixed(1)} км ідуть у твою скарбничку здоров'я. Не збавляй темп!`;
+                    feedbackEl.style.color = '#00a2ff';
+                }
+            }
+        }
+    }
+
+    // Запускаємо рендер історії
+    renderLastWorkout();
+
+
+    // ==========================================
+    // 🔥 7. ЛОГІКА АВТОНОМНОГО МІНІ-ПЛЕЄРА НА ГОЛОВНІЙ СТОРІНЦІ
+    // ==========================================
+    // Цей блок оживляє кнопки плеєра, якщо користувач сидить на головному дашборді
+    if (trackTitle && btnPlay) {
+        const playlist = [
+            {
+                title: "Cyberpunk Synthwave",
+                artist: "White Bat Audio",
+                src: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3", 
+                cover: "https://images.unsplash.com/photo-1508700115892-45ecd05ae2ad?w=300" 
+            },
+            {
+                title: "Power Running Drive",
+                artist: "EDM Workout Mix",
+                src: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3",
+                cover: "https://images.unsplash.com/photo-1517838277536-f5f99be501cd?w=300"
+            }
+        ];
+
+        let currentTrackIndex = 0;
+        let isPlaying = false;
+        const audioWidget = new Audio();
+
+        function loadWidgetTrack(index) {
+            const track = playlist[index];
+            if (!track) return;
+            audioWidget.src = track.src;
+            if (trackTitle) trackTitle.innerText = track.title;
+            if (trackArtist) trackArtist.innerText = track.artist;
+            if (trackCover) trackCover.src = track.cover;
+            if (progressBar) progressBar.value = 0;
+        }
+
+        btnPlay.addEventListener('click', () => {
+            if (isPlaying) {
+                audioWidget.pause();
+                isPlaying = false;
+                btnPlay.innerHTML = '▶';
+            } else {
+                audioWidget.play().catch(e => console.log("Очікування кліку...", e));
+                isPlaying = true;
+                btnPlay.innerHTML = '⏸';
+            }
+        });
+
+        if (btnNext) {
+            btnNext.addEventListener('click', () => {
+                currentTrackIndex = (currentTrackIndex + 1) % playlist.length;
+                loadWidgetTrack(currentTrackIndex);
+                if (isPlaying) audioWidget.play().catch(e => console.log(e));
+            });
+        }
+
+        if (btnPrev) {
+            btnPrev.addEventListener('click', () => {
+                currentTrackIndex = (currentTrackIndex - 1 + playlist.length) % playlist.length;
+                loadWidgetTrack(currentTrackIndex);
+                if (isPlaying) audioWidget.play().catch(e => console.log(e));
+            });
+        }
+
+        if (volumeSlider) {
+            volumeSlider.addEventListener('input', (e) => {
+                audioWidget.volume = e.target.value / 100;
+            });
+        }
+
+        audioWidget.addEventListener('timeupdate', () => {
+            if (progressBar && audioWidget.duration) {
+                progressBar.value = (audioWidget.currentTime / audioWidget.duration) * 100;
+            }
+        });
+
+        if (progressBar) {
+            progressBar.addEventListener('input', (e) => {
+                if (audioWidget.duration) {
+                    audioWidget.currentTime = (e.target.value / 100) * audioWidget.duration;
+                }
+            });
+        }
+
+        // Перше завантаження першого треку у віджет
+        loadWidgetTrack(currentTrackIndex);
     }
 });
