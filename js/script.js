@@ -40,7 +40,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // 🔥 ГОЛОВНИЙ ФІКС ДЛЯ HTML5 ВАЛІДАЦІЇ:
             // Видаляємо обов'язковість (required) з полів першого кроку прямо перед тим, як їх сховати.
-            // Це на 100% захищає від помилки "An invalid form control with name='' is not focusable".
             displayName.removeAttribute('required');
             email.removeAttribute('required');
             password.removeAttribute('required');
@@ -103,12 +102,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
             try {
                 // 🚀 ДИНАМІЧНИЙ URL ДЛЯ ХОСТИНГУ:
-                // Якщо працюємо на комп'ютері (Live Server) — використовується localhost.
-                // Якщо відкриваємо через GitHub Pages — запит автоматично йде на твій живий сервер в інтернеті.
                 const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
                 
-                // ⚠️ ЗАМІНИ ЦЕ ПОСИЛАННЯ НА СВОЄ ПРАВИЛЬНЕ ПОСИЛАННЯ, ЯКЕ ДАСТЬ RENDER.COM!
-                const backendUrl = isLocalhost ? 'http://localhost:5000' : 'https://fitness-ai-backend.onrender.com';
+                // Автоматично підставляємо твій робочий сервер на Render, якщо ми в інтернеті
+                const backendUrl = isLocalhost ? 'http://localhost:5000' : 'https://dashboard-q8ol.onrender.com';
 
                 // Звертаємось до нашого Node.js бекенду
                 const response = await fetch(`${backendUrl}/api/auth/register`, {
