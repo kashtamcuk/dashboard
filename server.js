@@ -2,8 +2,18 @@ const express = require('express');
 const cors = require('cors');
 const app = express();
 
-// Дозволяємо CORS для запитів з будь-яких доменів (наприклад, з твого GitHub Pages)
-app.use(cors());
+// 🔥 НАЛАШТУВАННЯ CORS: Надаємо доступ твоєму GitHub Pages та локальному серверу
+app.use(cors({
+    origin: [
+        'https://kashtamcuk.github.io', 
+        'http://localhost:5500', 
+        'http://127.0.0.1:5500'
+    ],
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    credentials: true
+}));
+
 app.use(express.json());
 
 // 1. Реєстрація
