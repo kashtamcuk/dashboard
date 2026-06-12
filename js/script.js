@@ -28,7 +28,7 @@ document.addEventListener('DOMContentLoaded', () => {
             // Перевіряємо, чи існують поля в HTML (запобіжник від помилок розмітки)
             if (!displayName || !email || !password) {
                 console.error("Критична помилка: Деякі поля Кроку 1 відсутні в HTML.");
-                errorMessage.innerText = 'Помилка завантаження форми. Перевірте HTML-код.';
+                errorMessage.innerText = 'Помилка завантаження форми. Перевірте HTML-код або додайте поле Email.';
                 return;
             }
 
@@ -105,7 +105,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
                 
                 // Автоматично підставляємо твій робочий сервер на Render, якщо ми в інтернеті
-                // Оновлюємо суфікс на q8ol відповідно до твого кабінету Render:
                 const backendUrl = isLocalhost ? 'http://localhost:5000' : 'https://dashboard-q8ol.onrender.com';
 
                 // Звертаємось до нашого Node.js бекенду
@@ -117,7 +116,16 @@ document.addEventListener('DOMContentLoaded', () => {
                     body: JSON.stringify(payload)
                 });
 
-                const data = await response.json();
+                // 🔥 БЕЗПЕЧНЕ ЗЧИТУВАННЯ JSON (запобігає помилці Unexpected token '<')
+                let data = {};
+                const contentType = response.headers.get("content-type");
+                if (contentType && contentType.includes("application/json")) {
+                    data = await response.json();
+                } else {
+                    const textError = await response.text();
+                    console.error("Сервер повернув не JSON:", textError);
+                    throw new Error("Сервер повернув помилку або оновлюється. Зачекайте 1 хвилину.");
+                }
 
                 if (!response.ok) {
                     throw new Error(data.error || 'Сталася помилка під час реєстрації.');
