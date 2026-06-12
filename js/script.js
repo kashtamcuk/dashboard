@@ -105,7 +105,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
                 
                 // Автоматично підставляємо твій робочий сервер на Render, якщо ми в інтернеті
-                const backendUrl = isLocalhost ? 'http://localhost:5000' : 'https://dashboard-q8ol.onrender.com';
+                const backendUrl = isLocalhost ? 'http://localhost:5000' : 'https://dashboard-m7vg.onrender.com';
 
                 // Звертаємось до нашого Node.js бекенду
                 const response = await fetch(`${backendUrl}/api/auth/register`, {
