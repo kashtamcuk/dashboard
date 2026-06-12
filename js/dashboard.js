@@ -19,7 +19,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const waterButtons = document.querySelectorAll('.btn-water');
     const btnWaterReset = document.getElementById('btn-water-reset');
 
-    // 🔥 НОВІ ЕЛЕМЕНТИ: Віджет музичного плеєра на Дашборді
+    // Елементи музичного плеєра на Дашборді
     const trackTitle = document.getElementById('player-title');
     const trackArtist = document.getElementById('player-artist');
     const trackCover = document.getElementById('player-cover');
@@ -29,7 +29,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const volumeSlider = document.getElementById('player-volume');
     const progressBar = document.getElementById('player-progress');
 
-    // Налаштування користувача з Етапу 1
+    // Налаштування користувача
     const userWeight = parseFloat(localStorage.getItem('userWeight')) || 70; // дефолт 70кг
     const userName = localStorage.getItem('userName') || 'Атлет';
 
@@ -72,9 +72,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         const percentage = Math.min((currentWater / calculatedWaterTarget) * 100, 100);
         
-        // 🔥 ПЛАВНА АНІМАЦІЯ ВОДИ ПРИ ЗАВАНТАЖЕННІ ТА КЛІКАХ
+        // ПЛАВНА АНІМАЦІЯ ВОДИ
         if (waterProgressFill) {
-            waterProgressFill.style.width = '0%'; // Скидаємо в 0 для старту анімації
+            waterProgressFill.style.width = '0%'; 
             setTimeout(() => {
                 waterProgressFill.style.width = `${percentage}%`;
             }, 150);
@@ -122,46 +122,116 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     }
 
-    // Перша ініціалізація води
     updateWaterUI();
 
-
     // ==========================================
-    // 4. ЕТАП 5: ЧИСТИЙ РОЗРАХУНОК КАЛОРІЙ (ТІЛЬКИ З GPS-КАРТИ)
+    // 4. ЧИСТИЙ РОЗРАХУНОК КАЛОРІЙ (ТІЛЬКИ З GPS-КАРТИ)
     // ==========================================
-    
     function renderCalories(targetCalories) {
-        // Забираємо калорії, які реальна активність набігала на GPS-мапі за сьогодні
         const totalBurned = parseInt(localStorage.getItem('todayBurnedCalories')) || 0;
         const dailyGoal = targetCalories || 2100;
 
-        // Виводимо числа на екран
         if (calBurned) calBurned.innerText = totalBurned;
         if (calTarget) calTarget.innerText = dailyGoal;
 
-        // Рахуємо відсоток прогресу
         const percent = Math.min((totalBurned / dailyGoal) * 100, 100);
 
-        // 🔥 ПЛАВНА АНІМАЦІЯ КАЛОРІЙ ПРИ ЗАВАНТАЖЕННІ СТОРІНКИ
         if (caloriesProgressFill) {
-            caloriesProgressFill.style.width = '0%'; // Старт з нуля
+            caloriesProgressFill.style.width = '0%'; 
             setTimeout(() => {
                 caloriesProgressFill.style.width = `${percent}%`;
             }, 150);
         }
 
-        // Оновлюємо текстовий відсоток
         if (caloriesPercentDisplay) {
             caloriesPercentDisplay.innerText = `${Math.floor(percent)}%`;
         }
     }
 
+    // ==========================================
+    // 🔥 5. СИСТЕМА GPS МОНІТОРИНГУ З ФІЛЬТРАЦІЄЮ GPS DRIFT
+    // ==========================================
+    let lastPosition = null;
+    let totalDistance = 0; // В метрах за поточне тренування
+
+    // Математична формула Гаверсинуса для розрахунку зміщення між точками
+    function calculateDistance(lat1, lon1, lat2, lon2) {
+        const R = 6371e3; // Радіус Землі в метрах
+        const phi1 = lat1 * Math.PI / 180;
+        const phi2 = lat2 * Math.PI / 180;
+        const deltaPhi = (lat2 - lat1) * Math.PI / 180;
+        const deltaLambda = (lon2 - lon1) * Math.PI / 180;
+
+        const a = Math.sin(deltaPhi / 2) * Math.sin(deltaPhi / 2) +
+                  Math.cos(phi1) * Math.cos(phi2) *
+                  Math.sin(deltaLambda / 2) * Math.sin(deltaLambda / 2);
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        return R * c;
+    }
+
+    if (navigator.geolocation) {
+        navigator.geolocation.watchPosition((position) => {
+            const { latitude, longitude, accuracy, speed } = position.coords;
+            
+            // Зчитуємо елементи швидкості та відстані з твого UI
+            const speedElement = document.querySelector('.card-body .text-info') || document.getElementById('current-speed');
+            const distanceElement = document.querySelector('.card-body .text-primary') || document.getElementById('current-distance');
+
+            // 🛑 ФІЛЬТР 1: Якщо телефон у приміщенні й похибка GPS більше 20 метрів — повний ігнор "стрибка"
+            if (accuracy > 20) {
+                console.warn(`[GPS Filter] Слабкий сигнал (${accuracy}м). Ігноруємо кімнатну похибку.`);
+                return;
+            }
+
+            if (lastPosition) {
+                const distanceMoved = calculateDistance(
+                    lastPosition.latitude, lastPosition.longitude,
+                    latitude, longitude
+                );
+
+                // Оцінюємо швидкість: вбудована або вирахована вручну (м/с)
+                const currentSpeedMS = speed !== null ? speed : distanceMoved;
+
+                // 🛑 ФІЛЬТР 2: Якщо зміщення менше 2.5 метрів АБО швидкість менша 0.6 м/с (менше 2 км/год) — примусовий нуль!
+                if (distanceMoved < 2.5 || currentSpeedMS < 0.6) {
+                    if (speedElement) speedElement.innerText = "0.0 км/год";
+                    return; 
+                }
+
+                // Якщо перевірки пройдені — користувач дійсно йде або біжить
+                totalDistance += distanceMoved;
+
+                if (distanceElement) {
+                    distanceElement.innerText = `${(totalDistance / 1000).toFixed(2)} км`;
+                }
+            }
+
+            // Виводимо швидкість у км/год, якщо вона вища за поріг спокою
+            if (speedElement) {
+                const speedKmH = speed && speed > 0.6 ? (speed * 3.6).toFixed(1) : "0.0";
+                speedElement.innerText = `${speedKmH} км/год`;
+            }
+
+            // Зберігаємо поточну координату як базову для наступного кроку
+            lastPosition = { latitude, longitude };
+
+        }, (error) => {
+            console.error("Помилка GPS датчика:", error.message);
+        }, {
+            enableHighAccuracy: true, // Вмикаємо апаратний GPS
+            timeout: 10000,
+            maximumAge: 0
+        });
+    }
 
     // ==========================================
-    // 5. ЗАПИТ ДО БЕКЕНД СЕРВЕРА (ІНІЦІАЛІЗАЦІЯ ПІДКАЗОК ШІ)
+    // 6. ЗАПИТ ДО БЕКЕНД СЕРВЕРА (ОНОВЛЕНО НА РОБОЧИЙ RENDER URL)
     // ==========================================
     try {
-        const response = await fetch('http://localhost:5000/api/dashboard/init', {
+        const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+        const backendUrl = isLocalhost ? 'http://localhost:5000' : 'https://dashboard-q8ol.onrender.com';
+
+        const response = await fetch(`${backendUrl}/api/dashboard/init`, {
             method: 'GET'
         });
 
@@ -171,34 +241,27 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         const data = await response.json();
 
-        // Приховуємо скелетон (анімацію завантаження)
         if (skeletonBlock) skeletonBlock.style.display = 'none';
 
-        // Виводимо головну пораду ШІ
         if (aiAdviceText) {
             aiAdviceText.innerText = data.aiAdvice;
         }
 
-        // Сервер тепер віддає ТІЛЬКИ глобальну ціль (наприклад 2100)
         renderCalories(parseInt(data.caloriesTarget) || 2100);
 
     } catch (error) {
         console.error('Помилка завантаження дашборду:', error);
-        
         if (skeletonBlock) skeletonBlock.style.display = 'none';
         
         if (aiAdviceText) {
             aiAdviceText.innerText = 'Не вдалося завантажити глобальні поради ШІ. Працює локальний ШІ-асистент.';
             aiAdviceText.style.color = '#ff6b6b';
         }
-
-        // Автономний режим (Fallback) — малюємо чисті калорії з GPS-карти
-        console.log('🤖 AI: Ввімкнено автономний режим трекера.');
         renderCalories(2100);
     }
 
     // ==========================================
-    // 6. ВІДОБРАЖЕННЯ ОСТАННЬОГО ТРЕНУВАННЯ З КАРТИ
+    // 7. ВІДОБРАЖЕННЯ ОСТАННЬОГО ТРЕНУВАННЯ З КАРТИ
     // ==========================================
     function renderLastWorkout() {
         const lastActivity = localStorage.getItem('lastWorkoutActivity');
@@ -228,14 +291,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }
 
-    // Запускаємо рендер історії
     renderLastWorkout();
 
-
     // ==========================================
-    // 🔥 7. ЛОГІКА АВТОНОМНОГО МІНІ-ПЛЕЄРА НА ГОЛОВНІЙ СТОРІНЦІ
+    // 8. ЛОГІКА АВТОНОМНОГО МІНІ-ПЛЕЄРА НА ГОЛОВНІЙ СТОРІНЦІ
     // ==========================================
-    // Цей блок оживляє кнопки плеєра, якщо користувач сидить на головному дашборді
     if (trackTitle && btnPlay) {
         const playlist = [
             {
@@ -314,7 +374,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             });
         }
 
-        // Перше завантаження першого треку у віджет
         loadWidgetTrack(currentTrackIndex);
     }
 });
