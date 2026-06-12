@@ -2,6 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const app = express();
 
+// Дозволяємо CORS для запитів з будь-яких доменів (наприклад, з твого GitHub Pages)
 app.use(cors());
 app.use(express.json());
 
@@ -39,6 +40,10 @@ app.post('/api/dashboard/init', (req, res) => {
     });
 });
 
-app.listen(5000, () => {
-    console.log("Сервер успішно запущено на http://localhost:5000");
+// 🔥 ФІКС ДЛЯ ДЕПЛОЮ: Зчитуємо порт, який видасть Render, або використовуємо 5000 локально
+const PORT = process.env.PORT || 5000;
+
+// 🔥 ФІКС ДЛЯ МЕРЕЖІ: Додаємо '0.0.0.0', щоб сервер слухав зовнішні запити
+app.listen(PORT, '0.0.0.0', () => {
+    console.log(`Сервер успішно запущено на порту ${PORT}`);
 });
