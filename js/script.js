@@ -25,9 +25,10 @@ document.addEventListener('DOMContentLoaded', () => {
             // Очищення помилок
             errorMessage.innerText = '';
 
-            // Перевіряємо, чи існують поля, щоб уникнути помилки "Cannot read properties of null"
+            // Перевіряємо, чи існують поля в HTML (запобіжник від помилок розмітки)
             if (!displayName || !email || !password) {
                 console.error("Критична помилка: Деякі поля Кроку 1 відсутні в HTML.");
+                errorMessage.innerText = 'Помилка завантаження форми. Перевірте HTML-код.';
                 return;
             }
 
@@ -37,13 +38,19 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
+            // 🔥 ГОЛОВНИЙ ФІКС ДЛЯ HTML5 ВАЛІДАЦІЇ:
+            // Видаляємо обов'язковість (required) з полів першого кроку прямо перед тим, як їх сховати.
+            // Це на 100% захищає від помилки "An invalid form control with name='' is not focusable".
+            displayName.removeAttribute('required');
+            email.removeAttribute('required');
+            password.removeAttribute('required');
+
             // Перемикання класів для відображення
             step1.classList.remove('active');
             step2.classList.add('active');
             formTitle.innerText = 'Реєстрація (Крок 2/2)';
 
-            // Тимчасово вимикаємо стандартну валідацію HTML5,
-            // щоб браузер не шукав приховані поля Кроку 1 при сабміті форми
+            // Тимчасово вимикаємо стандартну валідацію HTML5 для форми при сабміті
             if (form) {
                 form.setAttribute('novalidate', 'true');
             }
@@ -58,7 +65,13 @@ document.addEventListener('DOMContentLoaded', () => {
             step1.classList.add('active');
             formTitle.innerText = 'Реєстрація (Крок 1/2)';
 
-            // Якщо повернулися назад — повертаємо стандартну валідацію браузера
+            // Якщо повернулися назад — повертаємо атрибути required та стандартну валідацію
+            if (displayName && email && password) {
+                displayName.setAttribute('required', 'true');
+                email.setAttribute('required', 'true');
+                password.setAttribute('required', 'true');
+            }
+
             if (form) {
                 form.removeAttribute('novalidate');
             }
@@ -89,14 +102,13 @@ document.addEventListener('DOMContentLoaded', () => {
             };
 
             try {
-                // 🔥 РОЗУМНИЙ ДИНАМІЧНИЙ URL ДЛЯ ВАРІАНТУ Б:
-                // Якщо тестуєш на комп'ютері локально — використовується localhost.
-                // Якщо відкриваєш через телефон або GitHub Pages — підставляється твій локальний IP.
+                // 🚀 ДИНАМІЧНИЙ URL ДЛЯ ХОСТИНГУ:
+                // Якщо працюємо на комп'ютері (Live Server) — використовується localhost.
+                // Якщо відкриваємо через GitHub Pages — запит автоматично йде на твій живий сервер в інтернеті.
                 const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
                 
-                // ⚠️ ЗАМІНИ '192.168.X.X' НА СВОЮ РЕАЛЬНУ IPv4-АДРЕСУ, ЯКУ ТИ ЗНАЙШОВ ЧЕРЕЗ IPCONFIG!
-                const localIp = '192.168.X.X'; 
-                const backendUrl = isLocalhost ? 'http://localhost:5000' : `http://${localIp}:5000`;
+                // ⚠️ ЗАМІНИ ЦЕ ПОСИЛАННЯ НА СВОЄ ПРАВИЛЬНЕ ПОСИЛАННЯ, ЯКЕ ДАСТЬ RENDER.COM!
+                const backendUrl = isLocalhost ? 'http://localhost:5000' : 'https://fitness-ai-backend.onrender.com';
 
                 // Звертаємось до нашого Node.js бекенду
                 const response = await fetch(`${backendUrl}/api/auth/register`, {
