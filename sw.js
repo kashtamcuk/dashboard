@@ -1,21 +1,20 @@
 const CACHE_NAME = 'fitness-ai-v2';
 
-// Кешуємо ТІЛЬКИ те, що завантажується в браузер користувача
+// Кешуємо ТІЛЬКИ фронтенд (серверні файли сюди НЕ ПИШЕМО!)
 const URLS_TO_CACHE = [
-  '/',
-  '/index.html',
-  '/dashboard.html',
-  '/map.html',
-  '/music.html',
-  '/css/style.css',
-  '/css/dashboard.css',
-  '/js/script.js',
-  '/js/dashboard.js',
-  '/js/map.js',
-  '/js/player.js',
-  '/js/manifest.json', // Зверни увагу: він у тебе в папці js!
-  '/icon-192.png',
-  '/icon-512.png'
+  'index.html',
+  'dashboard.html',
+  'map.html',
+  'music.html',
+  'css/style.css',
+  'css/dashboard.css',
+  'js/script.js',
+  'js/dashboard.js',
+  'js/map.js',
+  'js/player.js',
+  'js/manifest.json',
+  'icon-192.png',
+  'icon-512.png'
 ];
 
 // Встановлення Service Worker
@@ -23,20 +22,20 @@ self.addEventListener('install', event => {
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then(cache => {
-        console.log('Кешуємо ресурси фронтенду...');
+        console.log('Кешування фронтенду...');
         return cache.addAll(URLS_TO_CACHE);
       })
   );
 });
 
-// Активація та видалення старого кешу
+// Оновлення кешу
 self.addEventListener('activate', event => {
   event.waitUntil(
     caches.keys().then(cacheNames => {
       return Promise.all(
         cacheNames.map(cache => {
           if (cache !== CACHE_NAME) {
-            console.log('Видаляємо старий кеш:', cache);
+            console.log('Видалення старого кешу:', cache);
             return caches.delete(cache);
           }
         })
@@ -45,8 +44,7 @@ self.addEventListener('activate', event => {
   );
 });
 
-// Стратегія: спочатку мережа, якщо немає інтернету — беремо з кешу
-// Це ідеально для динамічних фітнес-додатків з ШІ
+// Стратегія: Спочатку запит в інтернет, якщо немає зв'язку — беремо з кешу
 self.addEventListener('fetch', event => {
   event.respondWith(
     fetch(event.request)

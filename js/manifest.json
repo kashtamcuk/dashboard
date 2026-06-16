@@ -1,19 +1,19 @@
 {
   "short_name": "Фітнес-AI",
-  "name": "Фітнес-AI: Розумна Реєстрація",
+  "name": "Фітнес-AI: Розумні Тренування",
   "icons": [
     {
-      "src": "/icon-192.png",
+      "src": "icon-192.png",
       "type": "image/png",
       "sizes": "192x192"
     },
     {
-      "src": "/icon-512.png",
+      "src": "icon-512.png",
       "type": "image/png",
       "sizes": "512x512"
     }
   ],
-  "start_url": "/index.html",
+  "start_url": "index.html",
   "background_color": "#111827",
   "display": "standalone",
   "theme_color": "#22c55e"
